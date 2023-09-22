@@ -21,7 +21,7 @@ output:
 
 # - Prior to creating the plots, we undergo a comprehensive "PREPARATION AND ANALYSIS OF RNA-SEQ DATA" phase to ensure the data is well-prepared for visualization.
 
-# ===============================================
+# ========================================== ====
 # PREPARATION AND ANALYSIS OF RNA-SEQ DATA
 # ===============================================
 # This section focuses on importing, preparing, and analyzing RNA-seq data to detect differentially expressed genes.
