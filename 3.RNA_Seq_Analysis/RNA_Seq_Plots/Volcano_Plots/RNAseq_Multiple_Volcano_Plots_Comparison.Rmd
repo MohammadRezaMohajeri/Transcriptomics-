@@ -3,8 +3,8 @@ title: "RNAseq_Multiple_Volcano_Plots_Comparison"
 author: "Mohammad Reza Mohajeri"
 date: "2023-09-16"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 # ============================================================
 # Volcano Plot Scripts for RNA-Seq Analysis Visualization in R
