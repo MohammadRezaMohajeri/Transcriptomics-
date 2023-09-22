@@ -1,6 +1,8 @@
 name: Render Rmd to PDF
 
-on: [push]
+on:
+  push:
+    branches: [main] # This means it will only run on pushes to the "main" branch
 
 jobs:
   render:
@@ -15,22 +17,19 @@ jobs:
       with:
         r-version: '4.1.2'
 
-     - name: Install pandoc
-       run: |
-         sudo apt-get update
-         sudo apt-get install -y pandoc
-        
+    - name: Install pandoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
 
     - name: Install dependencies
       run: |
         Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes'))"
-        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"  # install ggplot2 version 3.3.6
+        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
         Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
         Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'genefilter', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
-
-
 
     - name: Render Rmd file
       run: |
