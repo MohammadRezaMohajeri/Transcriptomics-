@@ -17,10 +17,9 @@ jobs:
    
     - name: Install dependencies
       run: |
-        install.packages(c("ggplot2", "EnhancedVolcano", "rmarkdown", "tinytex"))
-        tinytex::install_tinytex()
-        lualatex_path <- Sys.which("lualatex")
-        writeLines(paste('PATH=', dirname(lualatex_path), sep=""), con = "~/.Renviron")
+        Rscript -e "install.packages(c('ggplot2', 'EnhancedVolcano', 'rmarkdown', 'tinytex'))"
+        Rscript -e "tinytex::install_tinytex()"
+        Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
 
     - name: Render Rmd file
       run: |
