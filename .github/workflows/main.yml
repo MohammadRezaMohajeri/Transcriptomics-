@@ -15,6 +15,12 @@ jobs:
       with:
         r-version: '4.1.2'
 
+     - name: Install pandoc
+       run: |
+         sudo apt-get update
+         sudo apt-get install -y pandoc
+        
+
     - name: Install dependencies
       run: |
         Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes'))"
