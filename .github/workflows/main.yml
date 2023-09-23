@@ -1,41 +1,43 @@
-name: Render Rmd to PDF
+name: Render R Markdown Document
 
-on:
-  push:
-    branches: [main]
+on: [push]
 
 jobs:
   render:
     runs-on: ubuntu-latest
-
+    
     steps:
+    # Step 1: Checkout the main repo
     - name: Checkout repo
       uses: actions/checkout@v2
       with:
         token: ${{ secrets.GITHUB_TOKEN }} 
 
+    # Step 2: Checkout the confidential_files repository
     - name: Checkout private repository with confidential files
       uses: actions/checkout@v2
       with:
         repository: MohammadRezaMohajeri/confidential_files
         token: ${{ secrets.GIT_PAT }}
         path: ./confidential_files
-        
-    - name: Setup R
-      uses: r-lib/actions/setup-r@v2
+
+    # Step 3: Set up R and necessary system dependencies
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v1
       with:
-        r-version: '4.1.2'
-
-    # Only installing rmarkdown as it's the minimum requirement for this test
-    - name: Install rmarkdown
+        r-version: '4.1.0'  # Modify this to your desired R version if necessary
+    
+    - name: Install system dependencies
       run: |
-        Rscript -e "install.packages('rmarkdown')"
-
-    # This step will list all the directories and files in the root
-    - name: List directories
+        sudo apt-get update
+        sudo apt-get install -y pandoc libcurl4-openssl-dev libssl-dev libxml2-dev  # Adding some typical system dependencies for R packages
+    
+    # Step 4: Install R dependencies. (This can be trimmed down further if you know exactly which packages you need)
+    - name: Install dependencies
       run: |
-        ls -alh
+        install.packages(c("rmarkdown", "tidyverse", "ggplot2"))  # Add or remove packages based on your requirements
 
+    # Step 5: Render the R Markdown file
     - name: Render Rmd file
       run: |
-        Rscript -e "rmarkdown::render('3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs', params = list(data_path = '../confidential_files/Clari_Seond_Task_CountMetadata/countMatrix.tsv', meta_path = '../confidential_files/Clari_Seond_Task_CountMetadata/metadata.tsv'))"
+        Rscript -e "rmarkdown::render('3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs', params = list(data_path = './confidential_files/Clari_Seond_Task_CountMetadata/countMatrix.tsv', meta_path = './confidential_files/Clari_Seond_Task_CountMetadata/metadata.tsv'))"
