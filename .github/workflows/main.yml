@@ -12,21 +12,13 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v2
       with:
-        token: ${{ secrets.GITHUB_TOKEN }} 
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    # New step to checkout my confidential files repository
-    - name: Checkout private repository with confidential files
-      uses: actions/checkout@v2
-      with:
-        repository: MohammadRezaMohajeri/confidential_files
-        token: ${{ secrets.GIT_PAT }}
-        path: ./confidential_files
-
-    - name: Check file existence
+    - name: Check file existence in main repo
       run: |
         pwd
-        ls -alh ./confidential_files/Clari_Seond_Task_CountMetadata/
-        
+        ls -alh 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/
+
     - name: Setup R
       uses: r-lib/actions/setup-r@v2
       with:
@@ -48,7 +40,7 @@ jobs:
 
     - name: Render Rmd file
       run: |
-        Rscript -e "rmarkdown::render('3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs', params = list(data_path = '/home/runner/work/Transcriptomics-/Transcriptomics-/confidential_files/Clari_Seond_Task_CountMetadata/countMatrix.tsv', meta_path = '/home/runner/work/Transcriptomics-/Transcriptomics-/confidential_files/Clari_Seond_Task_CountMetadata/metadata.tsv'))"
+        Rscript -e "rmarkdown::render('3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs', params = list(data_path = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/countMatrix.tsv', meta_path = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/metadata.tsv'))"
 
     - name: Commit and push changes
       run: |
