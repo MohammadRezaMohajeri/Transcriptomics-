@@ -11,6 +11,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }} 
 
     # New step to checkout my confidential files repository
     - name: Checkout private repository with confidential files
