@@ -10,9 +10,9 @@ params:
   meta_path: "metadata.tsv"    # Default path for local rendering, will be overwritten by GitHub Actions.
 ---
 
-# =========================================================== =
+# ============================================================
 # Volcano Plot Scripts for RNA-Seq Analysis Visualization in R
-# =========================================================== =
+# ============================================================
 
 # - This Rmd file provides a collection of scripts to generate volcano plots for visualizing RNA-Seq analysis results.
 # - Here, we employ three distinct methods for creating these plots to offer various perspectives and customizability.
