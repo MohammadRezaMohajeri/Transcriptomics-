@@ -2,7 +2,7 @@ name: Render Rmd to PDF
 
 on:
   push:
-    branches: [main] # This means it will only run on pushes to the "main" branch
+    branches: [main]
 
 jobs:
   render:
@@ -14,7 +14,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }} 
 
-    # New step to checkout my confidential files repository
     - name: Checkout private repository with confidential files
       uses: actions/checkout@v2
       with:
@@ -27,28 +26,16 @@ jobs:
       with:
         r-version: '4.1.2'
 
-    - name: Install pandoc
+    # Only installing rmarkdown as it's the minimum requirement for this test
+    - name: Install rmarkdown
       run: |
-        sudo apt-get update
-        sudo apt-get install -y pandoc
+        Rscript -e "install.packages('rmarkdown')"
 
-    - name: Install dependencies
+    # This step will list all the directories and files in the root
+    - name: List directories
       run: |
-        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes'))"
-        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
-        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
-        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'genefilter', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
-        Rscript -e "tinytex::install_tinytex()"
-        Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
+        ls -alh
 
     - name: Render Rmd file
       run: |
         Rscript -e "rmarkdown::render('3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs', params = list(data_path = '../confidential_files/Clari_Seond_Task_CountMetadata/countMatrix.tsv', meta_path = '../confidential_files/Clari_Seond_Task_CountMetadata/metadata.tsv'))"
-
-    - name: Commit and push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs/*
-        git commit -m "Add rendered PDF" || echo "No changes to commit"
-        git push
