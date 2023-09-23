@@ -5,7 +5,11 @@ date: "2023-09-16"
 output:
   pdf_document: default
   html_document: default
+params:
+  data_path: "countMatrix.tsv" # Default path for local rendering, will be overwritten by GitHub Actions.
+  meta_path: "metadata.tsv"    # Default path for local rendering, will be overwritten by GitHub Actions.
 ---
+
 # ============================================================
 # Volcano Plot Scripts for RNA-Seq Analysis Visualization in R
 # ============================================================
@@ -48,7 +52,9 @@ output:
 set.seed(1234)
 
 # Reading and preparing files:
-counts <- data.frame(read_tsv("countMatrix.tsv"))
+# Using parametrized paths to read data. These default paths are for local rendering.
+# When running through GitHub Actions, the paths will be provided by the workflow.
+counts <- data.frame(read_tsv(params$data_path))
 
 # Set the row names of the 'counts' data frame to be the first column (usually gene IDs or similar identifiers)
 rownames(counts) <- counts[,1]
@@ -67,8 +73,10 @@ length(which(is.na(counts)))
 # ===========================================
 # Importing_Metadata
 # ===========================================
-# Read metadata from a tab-separated file "metadata.tsv" into a data frame
-metadata <- read_tsv("metadata.tsv")
+# Read metadata from a tab-separated file "metadata.tsv" into a data frame:
+# Using parametrized paths to read meta-data. These default paths are for local rendering.
+# When running through GitHub Actions, the paths will be provided by the workflow.
+metadata <- read_tsv(params$meta_path)
 
 # Create a new column 'groups' in the metadata data frame.
 metadata$groups <- ifelse(metadata$Response == "Progressive Disease" | 
