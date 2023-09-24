@@ -33,6 +33,7 @@ params:
 # This section focuses on importing, preparing, and analyzing RNA-seq data to detect differentially expressed genes.
 ```{r message=FALSE, tidy=TRUE}
 
+  require(genefilter)
   require(readr)
   require(tidyr)
   require(gridExtra)
@@ -41,7 +42,6 @@ params:
   require(ggplot2)
   require(DESeq2)
   require(biomaRt)
-  require(genefilter)
   require(org.Hs.eg.db)
   require(ComplexHeatmap)
   require(clusterProfiler)
