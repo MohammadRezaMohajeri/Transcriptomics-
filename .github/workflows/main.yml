@@ -31,17 +31,17 @@ jobs:
 
     - name: Install dependencies
       run: |
-        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes'))"
+        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools'))"
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
         Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
-        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'genefilter', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
-        Rscript -e "BiocManager::install('genefilter', version = '3.14')"
-        Rscript -e "if (!requireNamespace('genefilter', quietly = TRUE)) { install.packages('devtools'); devtools::install_bioc('genefilter'); }"
-        Rscript -e "if (!requireNamespace('curl', quietly = TRUE)) install.packages('curl')"
-        Rscript -e "if (!requireNamespace('httr', quietly = TRUE)) install.packages('httr')"
-        Rscript -e "BiocManager::install('GenomeInfoDb')"
+        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'GenomeInfoDb'))"
+        
+        # Directly attempt to install genefilter using devtools
+        Rscript -e "devtools::install_bioc('genefilter', version = '3.14')"
+        
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
+
 
     - name: Render Rmd file
       run: |
