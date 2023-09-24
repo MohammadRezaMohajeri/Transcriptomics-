@@ -40,7 +40,8 @@ jobs:
 
     - name: Render Rmd file
       run: |
-        Rscript -e "rmarkdown::render('3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs', params = list(data_path = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/countMatrix.tsv', meta_path = '3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/metadata.tsv'))"
+        cd 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots
+        Rscript -e "rmarkdown::render('Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = 'Outputs', params = list(data_path = 'countMatrix.tsv', meta_path = 'metadata.tsv'))"
 
     - name: Commit and push changes
       run: |
