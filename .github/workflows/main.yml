@@ -35,13 +35,11 @@ jobs:
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
         Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
         Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'genefilter', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
-        
-        # Install genefilter using BiocManager
-        Rscript -e "BiocManager::install('genefilter', version = '3.8')"
-
-        # Check if genefilter is installed successfully. If not, use devtools to attempt the installation.
+        Rscript -e "BiocManager::install('genefilter', version = '3.14')"
         Rscript -e "if (!requireNamespace('genefilter', quietly = TRUE)) { install.packages('devtools'); devtools::install_bioc('genefilter'); }"
-
+        Rscript -e "if (!requireNamespace('curl', quietly = TRUE)) install.packages('curl')"
+        Rscript -e "if (!requireNamespace('httr', quietly = TRUE)) install.packages('httr')"
+        Rscript -e "BiocManager::install('GenomeInfoDb')"
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
 
@@ -57,4 +55,3 @@ jobs:
         git add 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs/*
         git commit -m "Add rendered PDF" || echo "No changes to commit"
         git push
-       
