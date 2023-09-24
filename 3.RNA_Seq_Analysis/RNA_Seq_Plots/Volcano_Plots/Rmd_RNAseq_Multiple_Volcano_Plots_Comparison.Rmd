@@ -6,8 +6,9 @@ output:
   pdf_document: default
   html_document: default
 params:
-  data_path: "3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/countMatrix.tsv"
-  meta_path: "3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/metadata.tsv"
+  data_path: "countMatrix.tsv"
+  meta_path: "metadata.tsv"
+
 
 ---
 
