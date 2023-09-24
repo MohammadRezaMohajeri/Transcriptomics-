@@ -23,44 +23,20 @@ jobs:
       uses: r-lib/actions/setup-r@v2
       with:
         r-version: '4.1.2'
-    
-    # Setup caching for R packages and TinyTeX installation
-    - name: Setup R Package Cache
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.R/library
-          ~/.TinyTeX
-          ~/AppData/Roaming/TinyTeX
-          /Library/TinyTeX
-          /usr/local/opt/tinytex/bin
-          /usr/share/tinytex/bin
-        key: ${{ runner.OS }}-r-${{ hashFiles('DESCRIPTION') }}
-    
-    # Install CRAN packages
-    - name: Install CRAN dependencies
-      run: |
-        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes'))"
-        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
-
-        Rscript -e "install.packages('XML', repos = 'http://cran.r-project.org')"
-
-    # Install Bioconductor packages
-    - name: Install Bioconductor dependencies
-      run: |
-        Rscript -e "install.packages('BiocManager', repos = 'http://cran.r-project.org')"
-        Rscript -e "BiocManager::install('DESeq2')"
-        Rscript -e "BiocManager::install('biomaRt')"
-        Rscript -e "BiocManager::install('genefilter')"
-        Rscript -e "BiocManager::install('org.Hs.eg.db')"
-        Rscript -e "BiocManager::install('clusterProfiler')"
-        Rscript -e "BiocManager::install('ggtree')"
-        Rscript -e "if ('genefilter' %in% installed.packages()[,'Package']) { print('genefilter installed successfully') } else { stop('genefilter not installed') }"
 
     - name: Install pandoc
       run: |
         sudo apt-get update
         sudo apt-get install -y pandoc
+
+    - name: Install dependencies
+      run: |
+        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes'))"
+        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
+        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
+        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'genefilter', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
+        Rscript -e "tinytex::install_tinytex()"
+        Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
 
     - name: Render Rmd file
       run: |
@@ -74,3 +50,4 @@ jobs:
         git add 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs/*
         git commit -m "Add rendered PDF" || echo "No changes to commit"
         git push
+       
