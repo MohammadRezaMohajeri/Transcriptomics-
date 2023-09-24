@@ -29,18 +29,22 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y pandoc
 
+    - name: Install devtools
+      run: |
+        Rscript -e "install.packages('devtools', repos = 'http://cran.rstudio.com/')"
+
     - name: Install dependencies
       run: |
         # Install system dependencies
         sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
-    
+
         # Install CRAN packages
         Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools'))"
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
         
         # Install Bioconductor manager if not available
         Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
-    
+
         # Install Bioconductor packages in the correct dependency order
         Rscript -e "BiocManager::install('GenomeInfoDb')"
         Rscript -e "BiocManager::install('Biostrings')"
@@ -57,6 +61,24 @@ jobs:
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
 
+    - name: Verify Package Installation
+      run: |
+        # List of intended packages
+        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
+
+        # Get the list of installed packages
+        installed_packages <- installed.packages()[, "Package"]
+
+        # Find packages that failed to install
+        missing_packages <- setdiff(intended_packages, installed_packages)
+        
+        if (length(missing_packages) > 0) {
+          cat("These packages failed to install:\n")
+          print(missing_packages)
+        } else {
+          cat("All packages installed successfully!\n")
+        }
+      shell: Rscript {0}
 
     - name: Render Rmd file
       run: |
