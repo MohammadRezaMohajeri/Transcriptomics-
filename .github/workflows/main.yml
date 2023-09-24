@@ -31,14 +31,29 @@ jobs:
 
     - name: Install dependencies
       run: |
+        # Install system dependencies
+        sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+    
+        # Install CRAN packages
         Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools'))"
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
-        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
-        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'GenomeInfoDb'))"
         
+        # Install Bioconductor manager if not available
+        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
+    
+        # Install Bioconductor packages in the correct dependency order
+        Rscript -e "BiocManager::install('GenomeInfoDb')"
+        Rscript -e "BiocManager::install('Biostrings')"
+        Rscript -e "BiocManager::install('KEGGREST')"
+        Rscript -e "BiocManager::install('AnnotationDbi')"
+        Rscript -e "BiocManager::install('DO.db')"
+        
+        # Now you can attempt to install the other packages
+        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
+    
         # Directly attempt to install genefilter using devtools
         Rscript -e "devtools::install_bioc('genefilter', version = '3.14')"
-        
+    
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
 
