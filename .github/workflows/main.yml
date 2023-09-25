@@ -29,55 +29,29 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y pandoc
 
-    - name: Install devtools
+    - name: Install system dependencies
       run: |
-        Rscript -e "install.packages('devtools', repos = 'http://cran.rstudio.com/')"
-
-    - name: Install dependencies
-      run: |
-        # Install system dependencies
         sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
-        # Install CRAN packages
-        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools'))"
+    - name: Install CRAN packages
+      run: |
+        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'BiocManager'))"
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
 
-        # Install Bioconductor manager if not available
-        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
+    - name: Install Bioconductor packages
+      run: |
+        Rscript -e "BiocManager::install(c('GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'genefilter', 'ggtree', 'EnhancedVolcano', 'clusterProfiler'))"
 
-        # Install Bioconductor packages in the correct dependency order
-        Rscript -e "BiocManager::install('GenomeInfoDb')"
-        Rscript -e "BiocManager::install('Biostrings')"
-        Rscript -e "BiocManager::install('KEGGREST')"
-        Rscript -e "BiocManager::install('AnnotationDbi')"
-        Rscript -e "BiocManager::install('DO.db')"
-
-        # Install EnhancedVolcano
-        Rscript -e "BiocManager::install('EnhancedVolcano')"
-
-                # Now you can attempt to install the other packages
-        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
-    
-        # Directly attempt to install genefilter using devtools
-        Rscript -e "devtools::install_bioc('genefilter', version = '3.14')"
-
-        # Install TinyTeX for rendering R Markdown to PDF
+    - name: Install TinyTeX for rendering R Markdown to PDF
+      run: |
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
-      
-      continue-on-error: true
 
     - name: Verify Package Installation
       run: |
-        # List of intended packages
         intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
-
-        # Get the list of installed packages
         installed_packages <- installed.packages()[, "Package"]
-
-        # Find packages that failed to install
         missing_packages <- setdiff(intended_packages, installed_packages)
-        
         if (length(missing_packages) > 0) {
           cat("These packages failed to install:\n")
           print(missing_packages)
@@ -99,4 +73,3 @@ jobs:
         git add 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs/*
         git commit -m "Add rendered PDF" || echo "No changes to commit"
         git push
-
