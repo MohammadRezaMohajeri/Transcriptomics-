@@ -35,7 +35,7 @@ jobs:
 
     - name: Install CRAN packages
       run: |
-        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'BiocManager'))"
+        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'BiocManager'))"
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
 
     - name: Install Bioconductor packages
@@ -49,7 +49,7 @@ jobs:
 
     - name: Verify Package Installation
       run: |
-        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
+        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
         installed_packages <- installed.packages()[, "Package"]
         missing_packages <- setdiff(intended_packages, installed_packages)
         if (length(missing_packages) > 0) {
