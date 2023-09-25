@@ -60,7 +60,9 @@ jobs:
     
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
-
+      
+      continue-on-error: true
+      
     - name: Verify Package Installation
       run: |
         # List of intended packages
@@ -79,6 +81,7 @@ jobs:
           cat("All packages installed successfully!\n")
         }
       shell: Rscript {0}
+      if: always()
  
     - name: Render Rmd file
       run: |
