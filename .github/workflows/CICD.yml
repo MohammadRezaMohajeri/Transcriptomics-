@@ -1,1 +1,102 @@
 
+name: Render Rmd to PDF
+
+on:
+  push:
+    branches: [main] # This means it will only run on pushes to the "main" branch
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check file existence in main repo
+      run: |
+        pwd
+        ls -alh 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/
+
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: '4.3'
+
+    - name: Install pandoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+
+    - name: Install devtools
+      run: |
+        Rscript -e "install.packages('devtools', repos = 'http://cran.rstudio.com/')"
+
+    - name: Install dependencies
+      run: |
+        # Install system dependencies
+        sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+
+        # Install CRAN packages
+        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools'))"
+        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
+
+        # Install Bioconductor manager if not available
+        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
+
+        # Install Bioconductor packages in the correct dependency order
+        Rscript -e "BiocManager::install('GenomeInfoDb')"
+        Rscript -e "BiocManager::install('Biostrings')"
+        Rscript -e "BiocManager::install('KEGGREST')"
+        Rscript -e "BiocManager::install('AnnotationDbi')"
+        Rscript -e "BiocManager::install('DO.db')"
+
+        # Install EnhancedVolcano
+        Rscript -e "BiocManager::install('EnhancedVolcano')"
+
+                # Now you can attempt to install the other packages
+        Rscript -e "BiocManager::install(c('DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree'))"
+    
+        # Directly attempt to install genefilter using devtools
+        Rscript -e "devtools::install_bioc('genefilter', version = '3.14')"
+
+        # Install TinyTeX for rendering R Markdown to PDF
+        Rscript -e "tinytex::install_tinytex()"
+        Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
+      
+      continue-on-error: true
+
+    - name: Verify Package Installation
+      run: |
+        # List of intended packages
+        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
+
+        # Get the list of installed packages
+        installed_packages <- installed.packages()[, "Package"]
+
+        # Find packages that failed to install
+        missing_packages <- setdiff(intended_packages, installed_packages)
+        
+        if (length(missing_packages) > 0) {
+          cat("These packages failed to install:\n")
+          print(missing_packages)
+        } else {
+          cat("All packages installed successfully!\n")
+        }
+      shell: Rscript {0}
+      if: always()
+
+    - name: Render Rmd file
+      run: |
+        cd 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots
+        Rscript -e "rmarkdown::render('Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = 'Outputs', params = list(data_path = 'countMatrix.tsv', meta_path = 'metadata.tsv'))"
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs/*
+        git commit -m "Add rendered PDF" || echo "No changes to commit"
+        git push
