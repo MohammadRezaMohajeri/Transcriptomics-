@@ -1,0 +1,89 @@
+name: Render Rmd to PDF
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check file existence in main repo
+      run: |
+        pwd
+        ls -alh 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/
+
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: '4.3'
+
+    - name: Install pandoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+
+    - name: Install system dependencies and R packages
+      run: |
+        install_system_dependencies <- function(dependencies) {
+          for (dep in dependencies) {
+            status <- system(paste("dpkg -l | grep", dep))
+            if (status != 0) {
+              message(paste("Installing system dependency:", dep))
+              system(paste("sudo apt-get install -y", dep))
+            } else {
+              message(paste("System dependency already installed:", dep))
+            }
+          }
+        }
+
+        system_deps <- c("libcurl4-openssl-dev", "libxml2-dev", "libssl-dev", "libharfbuzz-dev", "libfribidi-dev")
+        install_system_dependencies(system_deps)
+
+        install_packages <- function(packages) {
+          new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+          if(length(new_packages)) install.packages(new_packages, dependencies=TRUE)
+        }
+
+        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
+        install_packages(intended_packages)
+
+        installed <- intended_packages %in% installed.packages()[,"Package"]
+        failed_packages <- intended_packages[!installed]
+
+        if(length(failed_packages) > 0) {
+          message("These packages failed to install:")
+          print(failed_packages)
+          exit(1)
+        } else {
+          message("All packages installed successfully!")
+        }
+      shell: Rscript {0}
+
+    - name: Install Bioconductor packages
+      run: |
+        Rscript -e "BiocManager::install(c('GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'genefilter', 'ggtree', 'EnhancedVolcano', 'clusterProfiler'))"
+
+    - name: Install TinyTeX for rendering R Markdown to PDF
+      run: |
+        Rscript -e "tinytex::install_tinytex()"
+        Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
+
+    - name: Render Rmd file
+      run: |
+        cd 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots
+        Rscript -e "rmarkdown::render('Rmd_RNAseq_Multiple_Volcano_Plots_Comparison.Rmd', output_format = 'pdf_document', output_dir = 'Outputs', params = list(data_path = 'countMatrix.tsv', meta_path = 'metadata.tsv'))"
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add 3.RNA_Seq_Analysis/RNA_Seq_Plots/Volcano_Plots/Outputs/*
+        git commit -m "Add rendered PDF" || echo "No changes to commit"
+        git push
