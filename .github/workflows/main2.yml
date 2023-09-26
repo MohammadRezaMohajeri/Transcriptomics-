@@ -2,7 +2,7 @@ name: Render Rmd to PDF
 
 on:
   push:
-    branches: [main]
+    branches: [main] # This means it will only run on pushes to the "main" branch
 
 jobs:
   render:
@@ -29,51 +29,42 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y pandoc
 
-    - name: Install system dependencies and R packages
+    - name: Install system dependencies
       run: |
-        install_system_dependencies <- function(dependencies) {
-          for (dep in dependencies) {
-            status <- system(paste("dpkg -l | grep", dep))
-            if (status != 0) {
-              message(paste("Installing system dependency:", dep))
-              system(paste("sudo apt-get install -y", dep))
-            } else {
-              message(paste("System dependency already installed:", dep))
-            }
-          }
-        }
+        sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
-        system_deps <- c("libcurl4-openssl-dev", "libxml2-dev", "libssl-dev", "libharfbuzz-dev", "libfribidi-dev")
-        install_system_dependencies(system_deps)
+    - name: Install CRAN packages
+      run: |
+        Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'BiocManager'))"
+        Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
 
-        install_packages <- function(packages) {
-          new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
-          if(length(new_packages)) install.packages(new_packages, dependencies=TRUE)
-        }
-
-        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'devtools', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
-        install_packages(intended_packages)
-
-        installed <- intended_packages %in% installed.packages()[,"Package"]
-        failed_packages <- intended_packages[!installed]
-
-        if(length(failed_packages) > 0) {
-          message("These packages failed to install:")
-          print(failed_packages)
-          exit(1)
-        } else {
-          message("All packages installed successfully!")
-        }
-      shell: Rscript {0}
+    - name: Setup Bioconductor
+      run: |
+        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
 
     - name: Install Bioconductor packages
       run: |
-        Rscript -e "BiocManager::install(c('GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'genefilter', 'ggtree', 'EnhancedVolcano', 'clusterProfiler'))"
+        Rscript -e "BiocManager::install(c('EnhancedVolcano', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter'))"
 
     - name: Install TinyTeX for rendering R Markdown to PDF
       run: |
         Rscript -e "tinytex::install_tinytex()"
         Rscript -e "lualatex_path <- Sys.which('lualatex'); writeLines(paste('PATH=', dirname(lualatex_path), sep=''), con = '~/.Renviron')"
+
+    - name: Verify Package Installation
+      run: |
+        intended_packages <- c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'EnhancedVolcano', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'ggplot2', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter')
+        installed_packages <- installed.packages()[, "Package"]
+        missing_packages <- setdiff(intended_packages, installed_packages)
+        if (length(missing_packages) > 0) {
+          cat("These packages failed to install:\n")
+          print(missing_packages)
+          stop("Package installation failed!") # Replaced exit(1) with stop()
+        } else {
+          cat("All packages installed successfully!\n")
+        }
+      shell: Rscript {0}
+      if: always()
 
     - name: Render Rmd file
       run: |
