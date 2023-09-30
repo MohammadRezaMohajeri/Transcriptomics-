@@ -38,9 +38,13 @@ jobs:
         Rscript -e "install.packages(c('readr', 'tidyr', 'gridExtra', 'reshape2', 'viridis', 'rmarkdown', 'tinytex', 'knitr', 'remotes', 'curl', 'httr', 'BiocManager'))"
         Rscript -e "remotes::install_version('ggplot2', version='3.3.6')"
 
+    - name: Setup Bioconductor
+      run: |
+        Rscript -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages('BiocManager')"
+
     - name: Install Bioconductor packages
       run: |
-        Rscript -e "BiocManager::install(c('GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'genefilter', 'ggtree', 'EnhancedVolcano', 'clusterProfiler'))"
+        Rscript -e "BiocManager::install(c('EnhancedVolcano', 'GenomeInfoDb', 'Biostrings', 'KEGGREST', 'AnnotationDbi', 'DO.db', 'DESeq2', 'biomaRt', 'org.Hs.eg.db', 'ComplexHeatmap', 'clusterProfiler', 'ggtree', 'genefilter'))"
 
     - name: Install TinyTeX for rendering R Markdown to PDF
       run: |
@@ -55,6 +59,7 @@ jobs:
         if (length(missing_packages) > 0) {
           cat("These packages failed to install:\n")
           print(missing_packages)
+          stop("Package installation failed!") # Replaced exit(1) with stop()
         } else {
           cat("All packages installed successfully!\n")
         }
