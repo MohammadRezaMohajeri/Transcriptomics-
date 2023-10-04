@@ -23,7 +23,7 @@ date: "2023-10-04"
       - Description: This chunk is an optional step to facilitate the exploratory inspection of individual sample files. It provides an opportunity to understand the structure and content of the files before proceeding to subsequent analyses.
 ```{r explore-sample-file}
 # Load a gzipped RNA-Seq count data sample for inspection
-p <- read.table(gzfile("Transcriptomics-/3.RNA_Seq_Analysis/1.GEO_RNASeq_CountMatrix_Extraction/Data/GSM3998274_245-Ann-Daly_S13.counts.txt.gz"), sep="\t", header = TRUE, row.names = 1)
+p <- read.table(gzfile("/home/omidmoh1980/Downloads/GSM3998274_245-Ann-Daly_S13.counts.txt.gz"), sep="\t", header = TRUE, row.names = 1)
 
 ```
 <br>
@@ -38,7 +38,7 @@ p <- read.table(gzfile("Transcriptomics-/3.RNA_Seq_Analysis/1.GEO_RNASeq_CountMa
 ```{r GSM-file-listing}
 
 # List all 'GSM' prefixed files in the specified directory
-allGSMFiles <- list.files("Transcriptomics-/3.RNA_Seq_Analysis/1.GEO_RNASeq_CountMatrix_Extraction/Data/", pattern="^GSM", full.names=TRUE)
+allGSMFiles <- list.files("/home/omidmoh1980/Downloads/", pattern="^GSM", full.names=TRUE)
 allGSMFiles <- grep("txt.gz$", allGSMFiles, value=TRUE)
 
 ```

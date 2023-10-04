@@ -13,7 +13,7 @@
 
 <meta name="date" content="2023-10-04" />
 
-<title>GEO RNASeq CountMatrix Extractor</title>
+<title>GEO RNASeq CountMatrix Extraction</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,7 +350,7 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">GEO RNASeq CountMatrix Extractor</h1>
+<h1 class="title toc-ignore">GEO RNASeq CountMatrix Extraction</h1>
 <h4 class="author">Mohammad Reza Mohajeri</h4>
 <h4 class="date">2023-10-04</h4>
 
@@ -386,7 +386,8 @@ terminal</h4>
 <pre><code>Description for the explore-sample-file chunk: 
   - Exploratory Inspection of a Sample File
   - Description: This chunk is an optional step to facilitate the exploratory inspection of individual sample files. It provides an opportunity to understand the structure and content of the files before proceeding to subsequent analyses.</code></pre>
-<pre class="r"><code>p &lt;- read.table(gzfile(&quot;/mnt/data/11-My_Local_GitHub_Repo/Transcriptomics-/3.RNA_Seq_Analysis/1.GEO_RNASeq_CountMatrix_Extraction/Data/GSM3998274_245-Ann-Daly_S13.counts.txt.gz&quot;), sep=&quot;\t&quot;, header = TRUE, row.names = 1)</code></pre>
+<pre class="r"><code># Load a gzipped RNA-Seq count data sample for inspection
+p &lt;- read.table(gzfile(&quot;/home/omidmoh1980/Downloads/GSM3998274_245-Ann-Daly_S13.counts.txt.gz&quot;), sep=&quot;\t&quot;, header = TRUE, row.names = 1)</code></pre>
 <p><br> <br></p>
 </div>
 <div id="listing-gsm-files" class="section level4">
@@ -395,8 +396,8 @@ terminal</h4>
     - This chunk identifies and lists all the GSM files (presumably from GEO) in the specified directory that end with &quot;txt.gz&quot;. 
     -This is typically useful when one has downloaded raw data files from the GEO database and needs to process or analyze them in R. 
     - Make sure to unpack the tarball first (using &quot;tar xf GSE135251_RAW.tar&quot;) before executing this chunk. </code></pre>
-<pre class="r"><code># list all files from the tarball 
-allGSMFiles &lt;- list.files(&quot;/mnt/data/11-My_Local_GitHub_Repo/Transcriptomics-/3.RNA_Seq_Analysis/1.GEO_RNASeq_CountMatrix_Extraction/Data/&quot;, pattern=&quot;^GSM&quot;, full.names=TRUE)
+<pre class="r"><code># List all &#39;GSM&#39; prefixed files in the specified directory
+allGSMFiles &lt;- list.files(&quot;/home/omidmoh1980/Downloads/&quot;, pattern=&quot;^GSM&quot;, full.names=TRUE)
 allGSMFiles &lt;- grep(&quot;txt.gz$&quot;, allGSMFiles, value=TRUE)</code></pre>
 <p><br> <br></p>
 </div>
@@ -410,9 +411,13 @@ Specifically, it:
     3. Assigns the cleaned name as the column name for the count data.
     4. Returns the processed data.
       The end result is a list of matrices (countMatrix), where each matrix corresponds to a GSM file&#39;s count data.</code></pre>
-<pre class="r"><code>countMatrix &lt;- lapply(allGSMFiles, function(x){
+<pre class="r"><code># Process each GSM file to extract count data:
+countMatrix &lt;- lapply(allGSMFiles, function(x){
+    # Read the delimited data from the file
     r &lt;- read.delim(x, header=FALSE, row.names=1, stringsAsFactors = FALSE)
+    # Extract a clean column name from the filename
     colname &lt;- gsub(&quot;\\.counts.*&quot;, &quot;&quot;, basename(x))
+    # Assign the modified name as the column name for the count data
     colnames(r) &lt;- colname
     r
 })</code></pre>
@@ -431,6 +436,14 @@ limma)</h4>
       - Each column is named according to the file from which its data was sourced.</code></pre>
 <pre class="r"><code># Combine multiple matrices/dataframes column-wise to create a single count matrix
   countMatrix &lt;- do.call(cbind, countMatrix)</code></pre>
+<p><br> <br></p>
+</div>
+<div id="exploring-the-assembled-count-matrix" class="section level4">
+<h4>Exploring the Assembled Count Matrix</h4>
+<pre><code>Description for the explore-count-matrix chunk: 
+    - This chunk provides an initial look at the assembled count matrix.
+    - First, it displays the top rows of the matrix to give a glimpse of its structure.
+    - Next, it outputs the matrix&#39;s dimensions to provide a sense of its size (number of genes vs number of samples). </code></pre>
 <pre class="r"><code># Display the first few rows of the combined count matrix
 head(countMatrix)
 
