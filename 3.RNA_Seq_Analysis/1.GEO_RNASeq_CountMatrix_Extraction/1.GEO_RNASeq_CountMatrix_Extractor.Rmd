@@ -1,29 +1,43 @@
 ---
 title: "GEO RNASeq CountMatrix Extraction"
 author: "Mohammad Reza Mohajeri"
-output: html_document
 date: "2023-10-04"
+output:
+  pdf_document: default
 ---
 
 
-##### ============================================================================================
-##### GSE135251
-##### https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135251
-##### Supplementary file       Size        Download        File type/resource
-##### GSE135251_RAW.tar        43.7 Mb       (http)        TAR (of TXT)
-#### "GSE135251_RAW.tar" file was downloaded from GEO from GSE135251, then the tarball was unpacked using "tar xf GSE135251_RAW.tar" in bash terminal
-##### ============================================================================================
+
+
+\begin{quote}
+
+GSE135251
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135251
+Supplementary file       Size        Download        File type/resource
+GSE135251RAW.tar        43.7 Mb       (http)        TAR (of TXT)
+"GSE135251RAW.tar" file was downloaded from GEO from GSE135251, then the tarball was unpacked using "tar xf GSE135251RAW.tar" in bash terminal
+
+\end{quote}
 <br>
 <br>
 
 #### Exploratory View of a Representative Sample File
 
+  \begin{quote}
     Description for the explore-sample-file chunk: 
       - Exploratory Inspection of a Sample File
       - Description: This chunk is an optional step to facilitate the exploratory inspection of individual sample files. It provides an opportunity to understand the structure and content of the files before proceeding to subsequent analyses.
+      
+  \end{quote}
+  
 ```{r explore-sample-file}
 # Load a gzipped RNA-Seq count data sample for inspection
-p <- read.table(gzfile("/home/omidmoh1980/Downloads/GSM3998274_245-Ann-Daly_S13.counts.txt.gz"), sep="\t", header = TRUE, row.names = 1)
+p <- read.table(
+  gzfile("/home/omidmoh1980/Downloads/GSM3998274_245-Ann-Daly_S13.counts.txt.gz"), 
+  sep="\t", 
+  header = TRUE, 
+  row.names = 1
+  )
 
 ```
 <br>
@@ -31,10 +45,14 @@ p <- read.table(gzfile("/home/omidmoh1980/Downloads/GSM3998274_245-Ann-Daly_S13.
 
 #### Listing GSM Files
 
-    Description for the GSM-file-listing chunk: 
+\begin{quote}
+      Description for the GSM-file-listing chunk: 
         - This chunk identifies and lists all the GSM files (presumably from GEO) in the specified directory that end with "txt.gz". 
         -This is typically useful when one has downloaded raw data files from the GEO database and needs to process or analyze them in R. 
-        - Make sure to unpack the tarball first (using "tar xf GSE135251_RAW.tar") before executing this chunk. 
+        - Make sure to unpack the tarball first (using "tar xf GSE135251RAW.tar") before executing this chunk.
+        
+\end{quote}
+        
 ```{r GSM-file-listing}
 
 # List all 'GSM' prefixed files in the specified directory
@@ -47,6 +65,7 @@ allGSMFiles <- grep("txt.gz$", allGSMFiles, value=TRUE)
 
 #### Loading and Processing Count Data
 
+\begin{quote}
     Description for the process-GSM-files chunk: 
     - This chunk reads in each GSM file and processes it to extract count data. 
     Specifically, it:
@@ -55,6 +74,8 @@ allGSMFiles <- grep("txt.gz$", allGSMFiles, value=TRUE)
         3. Assigns the cleaned name as the column name for the count data.
         4. Returns the processed data.
           The end result is a list of matrices (countMatrix), where each matrix corresponds to a GSM file's count data.
+          
+          \end{quote}
 ```{r process-GSM-files}
 # Process each GSM file to extract count data:
 countMatrix <- lapply(allGSMFiles, function(x){
@@ -72,6 +93,7 @@ countMatrix <- lapply(allGSMFiles, function(x){
 
 #### Combining Individual Count Matrices to Form a Comprehensive Count Matrix for Downstream Gene Expression Analyses (e.g. DESeq2, edgeR & limma)
 
+\begin{quote}
       Description for the assemble-count-matrix chunk: 
           - The 'do.call' function is employed here to bind together individual data frames from the 'countMatrix' list. 
           - Specifically:'do.call' takes a function (in this case, 'cbind') as its first argument.
@@ -79,6 +101,8 @@ countMatrix <- lapply(allGSMFiles, function(x){
           - Within this context, 'do.call' effectively "spreads out" each data frame in 'countMatrix' and uses 'cbind' to bind them all together column-wise.
           - As a result, the single, combined data frame we get has each of its columns representing the data extracted from a specific file in the 'allGSMFiles' list. 
           - Each column is named according to the file from which its data was sourced.
+          
+\end{quote}
 ```{r assemble-count-matrix}
 
 # Combine multiple matrices/dataframes column-wise to create a single count matrix
@@ -91,10 +115,13 @@ countMatrix <- lapply(allGSMFiles, function(x){
 
 #### Exploring the Assembled Count Matrix
 
+\begin{quote}
     Description for the explore-count-matrix chunk: 
         - This chunk provides an initial look at the assembled count matrix.
         - First, it displays the top rows of the matrix to give a glimpse of its structure.
         - Next, it outputs the matrix's dimensions to provide a sense of its size (number of genes vs number of samples). 
+        
+        \end{quote}
 ```{r explore-count-matrix, results='hide'}
 # Display the first few rows of the combined count matrix
 head(countMatrix)
