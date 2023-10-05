@@ -1,40 +1,16 @@
 ---
-title: "RNAseq_Multiple_Volcano_Plots_Comparison"
+title: "RNAseq Multiple Volcano Plots Comparison"
 author: "Mohammad Reza Mohajeri"
 date: "2023-09-16"
 output:
   pdf_document: default
   html_document: default
-params:
-  data_path: "countMatrix.tsv"
-  meta_path: "metadata.tsv"
-
-
 ---
 
-# ============================================================
-# Volcano Plot Scripts for RNA-Seq Analysis Visualization in R
-# ============================================================
+#### This section focuses on importing, preparing, and analyzing RNA-seq data to detect differentially expressed genes.
+```{r message=FALSE}
 
-# - This Rmd file provides a collection of scripts to generate volcano plots for visualizing RNA-Seq analysis results.
-# - Here, we employ three distinct methods for creating these plots to offer various perspectives and customizability.
-
-# ===============================================================================================================
-# 1. ggplot2 Volcano Plot (Method 1): Leveraging the powerful ggplot2 package, this section offers a detailed and customizable volcano plot.
-# 2. ggplot2 Volcano Plot (Method 2): An alternative rendition using ggplot2, providing a different visualization approach.
-# 3. EnhancedVolcano Plot: Making use of the EnhancedVolcano package in R, this section is tailored for generating informative volcano plots in a genomics context.
-# ===============================================================================================================
-
-# - Prior to creating the plots, we undergo a comprehensive "PREPARATION AND ANALYSIS OF RNA-SEQ DATA" phase to ensure the data is well-prepared for visualization.
-
-# ========================================== ====
-# PREPARATION AND ANALYSIS OF RNA-SEQ DATA
-# ===============================================
-# This section focuses on importing, preparing, and analyzing RNA-seq data to detect differentially expressed genes.
-```{r message=FALSE, tidy=TRUE}
-
-  require(genefilter)
-  require(readr)
+  require(readr) 
   require(tidyr)
   require(gridExtra)
   require(reshape2)
@@ -42,11 +18,15 @@ params:
   require(ggplot2)
   require(DESeq2)
   require(biomaRt)
+  require(genefilter)
   require(org.Hs.eg.db)
   require(ComplexHeatmap)
   require(clusterProfiler)
   require(readr)
   require(knitr)
+  require(genefilter)
+  require(ggtree)
+
 # ===========================================
 # Importing_Counts_Matrix
 # ===========================================
@@ -54,11 +34,10 @@ params:
 set.seed(1234)
 
 # Reading and preparing files:
-# Using parametrized paths to read data. These default paths are for local rendering.
-# When running through GitHub Actions, the paths will be provided by the workflow.
-counts <- data.frame(read_tsv(params$data_path))
+counts <- data.frame(read_tsv("countMatrix.tsv"))
 
-# Set the row names of the 'counts' data frame to be the first column (usually gene IDs or similar identifiers)
+# Set the row names of the 'counts' data frame to be the first column 
+# (usually gene IDs or similar identifiers)
 rownames(counts) <- counts[,1]
 
 # Remove the first column since its information is now in row names
@@ -75,21 +54,17 @@ length(which(is.na(counts)))
 # ===========================================
 # Importing_Metadata
 # ===========================================
-# Read metadata from a tab-separated file "metadata.tsv" into a data frame:
-# Using parametrized paths to read meta-data. These default paths are for local rendering.
-# When running through GitHub Actions, the paths will be provided by the workflow.
-metadata <- read_tsv(params$meta_path)
+# Read metadata from a tab-separated file "metadata.tsv" into a data frame
+metadata <- read_tsv("metadata.tsv")
 
 # Create a new column 'groups' in the metadata data frame.
-metadata$groups <- ifelse(metadata$Response == "Progressive Disease" | 
-                            metadata$Response ==  "Stable Disease",
-                          "NonResponder", 
-                          "Responder")
+metadata$groups <- ifelse(metadata$Response == "Progressive Disease" | metadata$Response ==  "Stable Disease", "NonResponder", "Responder")
 
 # Sort the rows of the metadata data frame by 'Sample.name' in ascending order
 metadata <- metadata[order(metadata$Sample.name), ]
 
-# Convert the 'groups' column to a factor data type, useful for statistical modeling:
+# Convert the 'groups' column to a factor data type, 
+# useful for statistical modeling:
 metadata$groups <- factor(metadata$groups)
 
 # ===========================================
@@ -118,6 +93,7 @@ counts <- filtered_counts
 # ===========================================
 # EnsemblID_to_GeneSymbol_Mapping
 # ===========================================
+
 # Connect to Ensembl to fetch gene information
 ensembl <- useMart(biomart = "ensembl",
                    dataset = "hsapiens_gene_ensembl", 
@@ -190,6 +166,7 @@ message("Top 10 Up-regulated genes:")
 print(kable(top_up[, c("Symbol", "log2FoldChange", "padj")], digits = 2))
 
 message("Top 10 Down-regulated genes:")
+# Using the `kable` function from the `knitr` package to create a well-formatted table for the R Markdown output.
 print(kable(top_down[, c("Symbol", "log2FoldChange", "padj")], digits = 2))
 
   write_csv(up_down, "DESeq2/DESeq2_Sorted_Up_Down_Genes.csv")
@@ -210,22 +187,8 @@ results <- deseq_result(deseq,
 
 ```
 
- 
 
-# ===============================================
-# CUSTOM GGPLOT2 VOLCANO PLOT (METHOD 1)
-# ===============================================
-
-# A flexible approach leveraging ggplot2 to create a volcano plot from a CSV data file. 
-# This method classifies genes into categories:
-# - Upregulated
-# - Downregulated
-# - NotSignificant
-# 
-# Visualization is enhanced using a custom color palette. 
-# The generated plot is saved as a PDF for future reference.
-
-
+#### 1.CUSTOM GGPLOT2 VOLCANO PLOT (METHOD 1)
 ```{r ggplot2_Volcano_Plot, message=FALSE}
 # ----------------------------------------------------------
 # Section 1: Define the volcano_plot Function
@@ -234,18 +197,16 @@ volcano_plot <- function(padjlevel,
                          Up_FC,
                          Down_FC,
                          ntop) {
-  
+
 # ----------------------------------------------------------
 # Section 2: Create Output Directory for Plots
 # ----------------------------------------------------------  
   dir.create("plots", showWarnings = FALSE)
   
-  
 # ----------------------------------------------------------
 # Section 3: Read the Data
 # ---------------------------------------------------------- 
   volcano <- data.frame(read_csv(paste0("DESeq2/DESeq2_Unsorted_All_Genes.csv")))
-  
   
 # ----------------------------------------------------------
 # Section 4: Preprocess the Data
@@ -254,16 +215,16 @@ volcano_plot <- function(padjlevel,
   volcano <- volcano %>%
     mutate( neg_log10padj = -log10(padj)) %>%
     mutate(DEG = "NotSignificant" ) %>%
-    mutate(DEG = ifelse( neg_log10padj > -log10(padjlevel) & log2FoldChange > Up_FC, "Upregulated", DEG)) %>%
-    mutate(DEG = ifelse( neg_log10padj > -log10(padjlevel) & log2FoldChange < Down_FC, "Downregulated", DEG))
-  
+    mutate(DEG = ifelse( neg_log10padj > -log10(padjlevel) & 
+                           log2FoldChange > Up_FC, "Upregulated", DEG)) %>%
+    mutate(DEG = ifelse( neg_log10padj > -log10(padjlevel) &
+                           log2FoldChange < Down_FC, "Downregulated", DEG))
   
 # ----------------------------------------------------------
 # Section 5: Define Color Palette
 # ----------------------------------------------------------
 my_pal <- c("#943126", "#839192", "#A6761D", "#1E8449")
 
-  
 # ----------------------------------------------------------
 # Section 6: Create Data Subsets
 # ----------------------------------------------------------
@@ -276,7 +237,6 @@ my_pal <- c("#943126", "#839192", "#A6761D", "#1E8449")
   volcano_NotSignificant <- volcano[which(volcano$DEG == "NotSignificant" ),]
   
   volcano_all <- rbind(volcano_up, volcano_down, volcano_NotSignificant)
-  
   
 # ----------------------------------------------------------
 # Section 7: Modify Data Frame for Plotting
@@ -295,9 +255,14 @@ my_pal <- c("#943126", "#839192", "#A6761D", "#1E8449")
 # Section 8: Create the Volcano Plot
 # ----------------------------------------------------------
   g <- ggplot(data = volcano_all, 
-              aes(x = log2FoldChange, y =  neg_log10padj, color = DEG, fill = DEG, label = Top)) +
+              aes(
+                x = log2FoldChange, 
+                y =  neg_log10padj, 
+                color = DEG, 
+                fill = DEG, 
+                label = Top)
+              ) +
     
-  
       geom_point(size = 2, shape = 21) +
       geom_text(check_overlap = T, vjust = -0.1, nudge_y = 0.1) +
       scale_color_manual(values = my_pal) +
@@ -306,15 +271,14 @@ my_pal <- c("#943126", "#839192", "#A6761D", "#1E8449")
       theme_classic() +
       labs(x = "Log Fold Change", y = "-log10Padjusted", title = "Volcano PLot")
   
-  
 # ----------------------------------------------------------
 # Section 9: Customize the Plot and Save
 # ----------------------------------------------------------
   g <- g + theme(axis.line = element_line(linetype = "solid"),
                  axis.title = element_text(size = 14), 
                  axis.text = element_text(size = 14, colour = "black"),
-                 plot.title = element_text(size = 20, hjust = 0.5)) +
-      labs(title = "Volcano Plot (ggplot2)")
+                 plot.title = element_text(size = 16, hjust = 0.5)) +
+      labs(title = "Volcano Plot (ggplot2-METHOD 1)")
   
   pdf("plots/volcanoplot.pdf", width = 10, height = 8)
   print(g)
@@ -324,7 +288,6 @@ my_pal <- c("#943126", "#839192", "#A6761D", "#1E8449")
 # Section 10: Return the Plot
 # ----------------------------------------------------------
   return(g)
- 
 }
 
 # ----------------------------------------------------------
@@ -338,22 +301,7 @@ volcano_plot(padjlevel = 0.05,
 ```
  
  
- 
-
-
-#### A fully-optimized version that utilizes geom_text to label the top 5 genes. The position of each gene label can be individually adjusted for the best visual representation. The fold change (FC) is included next to each gene name, like PRAMEF36P (FC:25).
-
-
-
-# ===============================================
-# OPTIMIZED GGPLOT2 VOLCANO PLOT (METHOD 2)
-# ===============================================
-
-# This is an advanced rendition using ggplot2 focusing on visual clarity. 
-# Key features include:
-# - Identification and individual labeling of the top 5 upregulated and downregulated genes along with their fold change.
-# - Styling the plot with a minimalistic theme.
-# - Customized axes and titles for better clarity.
+#### 2. OPTIMIZED GGPLOT2 VOLCANO PLOT (METHOD 2)
 ```{r Volcano_ggplot_with_geom_text_NO_Symbol_Overlapping_Added_FC, message=FALSE}
 # ----------------------------------------------------------
 # Section 1: Load Required Packages
@@ -376,7 +324,6 @@ top_5_up <- data %>%
   filter(padj <= 0.05) %>% 
   arrange(desc(log2FoldChange)) %>% 
   head(5)
-
 
 # Filter the top 5 downregulated genes based on adjusted p-value and log2FoldChange
 top_5_down <- data %>% 
@@ -413,21 +360,29 @@ ggplot(data, aes(x=log2FoldChange, y=-log10(padj))) +
                       padj <= 0.05 & abs(log2FoldChange) < 1 ~ "Significant & Low Fold Change",
                       padj <= 0.05 & abs(log2FoldChange) > 1 ~ "Significant & High Fold Change"
                     )
-                 ), alpha = 1) +
-  
+                           ), alpha = 1) +
+                
   # Add labels for top 5 upregulated genes
   geom_text(data = up_1, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 0, nudge_x = 0.2, nudge_y = 0.2, size = 3) +
+  
   geom_text(data = up_2, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 0, nudge_x = -0.2, nudge_y = -0.2, size = 3) +
+  
   geom_text(data = up_3, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 0, nudge_x = 0.2, nudge_y = -0.2, size = 3) +
+  
   geom_text(data = up_4, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 0, nudge_x = -0.2, nudge_y = 0.2, size = 3) +
+  
   geom_text(data = up_5, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 0, nudge_x = 0, nudge_y = 0, size = 3) +
   
   
    # Add labels for top 5 downregulated genes
   geom_text(data = down_1, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 0, nudge_x = 0.2, nudge_y = -0.2, size = 3) + # PRAMEF36P
+  
   geom_text(data = down_2, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -4, hjust = 1.5, nudge_x = -3, nudge_y = 0.2, size = 3) + # TBC1D3
+  
   geom_text(data = down_3, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -3, hjust = 1.5, nudge_x = 0.2, nudge_y = 0.2, size = 3) + # TBC1D3G
+  
   geom_text(data = down_4, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -2, hjust = 2.6, nudge_x = 0.2, nudge_y = 0.2, size = 3) + # KLK3
+  
   geom_text(data = down_5, aes(label = sprintf("%s (FC:%d)", Symbol, round(log2FoldChange))), vjust = -1, hjust = 1, nudge_x = -3, nudge_y = 0.2, size = 3) + # ZNF716
   
    # Custom scale, theme, and labels
@@ -442,7 +397,7 @@ ggplot(data, aes(x=log2FoldChange, y=-log10(padj))) +
   geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "black") +
   theme_minimal() +
   labs(
-    title = "Volcano Plot (ggplot2) (My method)",
+    title = "Volcano Plot (ggplot2- METHOD 2)",
     x = "Log2 Fold Change",
     y = "-Log10 P-value",
     color = "Custom Legend Title",
@@ -452,44 +407,15 @@ ggplot(data, aes(x=log2FoldChange, y=-log10(padj))) +
   theme(
     legend.position = "bottom",
     legend.text = element_text(size = 8),
-    plot.title = element_text(hjust = 0.5) # 0 aligns the text to the left; 0.5 centers the text; 1 aligns the text to the right.
+    # 0 aligns the text to the left; 
+    # 0.5 centers the text; 
+    # 1 aligns the text to the right.
+    plot.title = element_text(hjust = 0.5, size = 16)
+    
   )
-
- 
 ```
 
-
-
-#### 3- Enhanced Volcano Plot Generation
-####  ------------------------------------------------------------------------------
-####  Final Version: Enhanced Volcano Plot Generation
-####  ------------------------------------------------------------------------------
-####  Purpose: 
-####  This code chunk is responsible for generating the final version of the Enhanced Volcano plot. 
-####  The plot visualizes the differentially expressed genes based on their log2FoldChange and 
-####  adjusted p-values (padj). 
-# 
-####  Key Features:
-#### - Custom coloring schemes based on significance and fold change.
-#### - Highlights and labels the top 5 upregulated and downregulated genes.
-####  - Axes and labels are appropriately scaled and styled.
-####  - Y-axis is transformed using -log10 for better visual discrimination of smaller p-values.
-#
-####  The plot is fine-tuned to be publication-ready, incorporating best practices in data visualization.
-####  ------------------------------------------------------------------------------
-
-
-
-# ===============================================
-# ENHANCED VOLCANO PLOT GENERATION
-# ===============================================
-
-# In this method, the EnhancedVolcano package is utilized to focus on producing a publication-ready volcano plot. 
-# Notable enhancements:
-# - Use of custom color schemes for differentiation.
-# - Precise labeling of top genes.
-# - Clear visualization of gene significance and fold change.
-# - Transformation of the y-axis to better differentiate smaller p-values.
+#### 3.Enhanced Volcano Plot Generation
 ```{r final-enhanced-volcano, message=FALSE}
 # ----------------------------------------------------------
 # Load Required Packages
@@ -556,19 +482,20 @@ ev_plot <- EnhancedVolcano(res,
                 # ALTERNATIVE: xlim = c(-13, 9),
                 # ALTERNATIVE: ylim = c(0, 30), 
                 
-                # Sets the y-axis limit based on -log10 transformation, making smaller p-values more visually prominent
+                # Sets the y-axis limit based on -log10 transformation, 
+                # making smaller p-values more visually prominent
                 xlim = c(-25, 8.3), 
                 ylim = c(0, -log10(10e-24)), 
                 legendLabSize = 10,
 
                 hline = c(10e-8), 
-                selectLab = select_labels,  # Only labels for top 5 up/down will be displayed
-                title = "Enhanced Volcano Plot",
+                # Only labels for top 5 up/down will be displayed
+                selectLab = select_labels,  
+                title = "Enhanced Volcano Plot (METHOD 3)",
                 subtitle = "Top up- and down-regulated genes",
                 caption = "p-value < 0.05, |log2FC| > 1.5"
 )
 
- 
 # Modify the text sizes
 ev_plot <- ev_plot + theme(
     #legend.text = element_text(size = 5),
@@ -585,16 +512,17 @@ print(ev_plot)
 
 
 ```
-
-
+ 
+ 
 #### About the above code
 ```{r}
 # 1- I used ifelse statements: 
 # ifelse:
-keyvals <- ifelse(res$padj > 0.05 & abs(res$log2FoldChange) < 1.5, 'gray',
-                  ifelse(res$padj > 0.05 & abs(res$log2FoldChange) >= 1.5, '#ffea00',
-                         ifelse(res$padj <= 0.05 & res$log2FoldChange > 1.5, '#FF0000',
-                                ifelse(res$padj <= 0.05 & res$log2FoldChange < -1.5, '#0000FF', 'default'))))
+keyvals <- 
+  ifelse(res$padj > 0.05 & abs(res$log2FoldChange) < 1.5, 'gray',
+    ifelse(res$padj > 0.05 & abs(res$log2FoldChange) >= 1.5, '#ffea00',
+      ifelse(res$padj <= 0.05 & res$log2FoldChange > 1.5, '#FF0000',
+        ifelse(res$padj <= 0.05 & res$log2FoldChange < -1.5, '#0000FF', 'default'))))
 
 # case_when:
 keyvals <- case_when(
@@ -606,9 +534,9 @@ keyvals <- case_when(
 )
 
 
-## we can use dplyr::case_when() as a replacement for nested ifelse() statements. case_when() can be more readable and maintainable, especially when you have multiple conditions to check.
-
-## 
+## we can use dplyr::case_when() as a replacement for nested ifelse() statements. 
+## case_when() can be more readable and maintainable, 
+## especially when you have multiple conditions to check.
 
 ```
  

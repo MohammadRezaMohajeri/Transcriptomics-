@@ -1,0 +1,67 @@
+---
+title: "GEO RNASeq CountMatrix Extraction"
+author: "Mohammad Reza Mohajeri"
+date: "2023-10-04"
+output:
+  pdf_document: default
+---
+#### Exploratory View of a Representative Sample File
+```{r explore-sample-file}
+# Load a gzipped RNA-Seq count data sample for inspection
+p <- read.table(
+  gzfile("/home/omidmoh1980/Downloads/GSM3998274_245-Ann-Daly_S13.counts.txt.gz"), 
+  sep="\t", 
+  header = TRUE, 
+  row.names = 1
+  )
+
+```
+
+#### Listing GSM Files
+```{r GSM-file-listing}
+
+# List all 'GSM' prefixed files in the specified directory
+allGSMFiles <- list.files("/home/omidmoh1980/Downloads/", pattern="^GSM", full.names=TRUE)
+allGSMFiles <- grep("txt.gz$", allGSMFiles, value=TRUE)
+
+```
+
+#### Loading and Processing Count Data
+```{r process-GSM-files}
+# Process each GSM file to extract count data:
+countMatrix <- lapply(allGSMFiles, function(x){
+    # Read the delimited data from the file
+    r <- read.delim(x, header=FALSE, row.names=1, stringsAsFactors = FALSE)
+    # Extract a clean column name from the filename
+    colname <- gsub("\\.counts.*", "", basename(x))
+    # Assign the modified name as the column name for the count data
+    colnames(r) <- colname
+    r
+})
+```
+
+#### Combining Individual Count Matrices to Form a Comprehensive Count Matrix for Downstream Gene Expression Analyses (e.g. DESeq2, edgeR & limma)
+```{r assemble-count-matrix}
+
+# Combine multiple matrices/dataframes column-wise to create a single count matrix
+  countMatrix <- do.call(cbind, countMatrix)
+
+```
+
+#### Exploring the Assembled Count Matrix
+```{r explore-count-matrix, results='hide'}
+# Display the first few rows of the combined count matrix
+head(countMatrix)
+
+# Display the dimensions of the count matrix
+dim(countMatrix)
+```
+
+
+  
+  
+ 
+
+    
+ 
+  
