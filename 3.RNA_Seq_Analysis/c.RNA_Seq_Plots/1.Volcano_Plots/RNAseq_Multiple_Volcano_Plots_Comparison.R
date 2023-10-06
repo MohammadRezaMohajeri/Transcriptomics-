@@ -1,14 +1,15 @@
----
-title: "RNAseq Multiple Volcano Plots Comparison"
-author: "Mohammad Reza Mohajeri"
-date: "2023-09-16"
-output:
-  pdf_document: default
-  html_document: default
----
+# =============================================================================
+# title:          "RNAseq Multiple Volcano Plots Comparison"
+# author:                "Mohammad Reza Mohajeri"
+# date:                      "2023-09-16"
+# =============================================================================
 
-#### This section focuses on importing, preparing, and analyzing RNA-seq data to detect differentially expressed genes.
-```{r message=FALSE}
+# =============================================================================
+# This section focuses on importing, preparing, and analyzing RNA-seq data 
+# to detect differentially expressed genes.
+# =============================================================================
+
+```R
 
   require(readr) 
   require(tidyr)
@@ -188,8 +189,14 @@ results <- deseq_result(deseq,
 ```
 
 
-#### 1.CUSTOM GGPLOT2 VOLCANO PLOT (METHOD 1)
-```{r ggplot2_Volcano_Plot, message=FALSE}
+
+
+# ==========================================================================================================================================================
+# 1.CUSTOM GGPLOT2 VOLCANO PLOT 
+# (METHOD 1)
+# ==========================================================================================================================================================
+
+```R
 # ----------------------------------------------------------
 # Section 1: Define the volcano_plot Function
 # ----------------------------------------------------------
@@ -297,12 +304,18 @@ volcano_plot(padjlevel = 0.05,
              Up_FC = 1,
              Down_FC = -1,
              ntop = 10) 
-
 ```
  
- 
-#### 2. OPTIMIZED GGPLOT2 VOLCANO PLOT (METHOD 2)
-```{r Volcano_ggplot_with_geom_text_NO_Symbol_Overlapping_Added_FC, message=FALSE}
+
+
+
+
+# ==========================================================================================================================================================
+# 2. OPTIMIZED GGPLOT2 VOLCANO PLOT 
+# (METHOD 2)
+# ==========================================================================================================================================================
+
+```R
 # ----------------------------------------------------------
 # Section 1: Load Required Packages
 # ----------------------------------------------------------
@@ -415,8 +428,15 @@ ggplot(data, aes(x=log2FoldChange, y=-log10(padj))) +
   )
 ```
 
-#### 3.Enhanced Volcano Plot Generation
-```{r final-enhanced-volcano, message=FALSE}
+
+
+
+# ==========================================================================================================================================================
+#   3.Enhanced Volcano Plot Generation
+# (METHOD 3)
+# ==========================================================================================================================================================
+
+```R
 # ----------------------------------------------------------
 # Load Required Packages
 # ----------------------------------------------------------
@@ -509,12 +529,14 @@ ev_plot <- ev_plot + theme(
 
 # Print the modified plot
 print(ev_plot)
-
-
 ```
  
- 
-#### About the above code
+
+# ==========================================================================================================================================================
+#  About the above code
+# 
+# ==========================================================================================================================================================
+
 ```{r}
 # 1- I used ifelse statements: 
 # ifelse:
